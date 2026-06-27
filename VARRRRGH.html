@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VARRRRGH! · offside verdict</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+            user-select: none;
+        }
+        body {
+            background: linear-gradient(145deg, #0b2b1e 0%, #1a3f2c 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .game-container {
+            background: #1e4d33;
+            padding: 2rem 2rem 1.8rem;
+            border-radius: 4rem 4rem 2.5rem 2.5rem;
+            box-shadow: 0 20px 30px rgba(0,0,0,0.7), inset 0 0 0 2px #6f9e7c;
+            border-bottom: 8px solid #3b6b4a;
+            position: relative;
+        }
+        .pitch-card {
+            background: #2d6a41;
+            padding: 1.6rem 1.6rem 1rem;
+            border-radius: 3rem 3rem 2rem 2rem;
+            box-shadow: inset 0 0 0 3px #4d8b5e;
+            position: relative;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            width: 780px;
+            height: 440px;
+            border-radius: 28px;
+            box-shadow: 0 10px 0 #153b25, 0 16px 24px rgba(0,0,0,0.5);
+            background: #3f8a54;
+            background-image: 
+                linear-gradient(#5aa06b 1px, transparent 1px),
+                linear-gradient(90deg, #5aa06b 1px, transparent 1px);
+            background-size: 40px 40px;
+            cursor: pointer;
+        }
+        .ui-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1.5rem 0.3rem 0.2rem;
+            flex-wrap: wrap;
+            gap: 0.8rem 0.2rem;
+        }
+        .hearts {
+            display: flex;
+            gap: 2px;
+            background: #1f3f2a;
+            padding: 8px 18px 8px 14px;
+            border-radius: 60px;
+            border: 1px solid #7bbf8a;
+            box-shadow: inset 0 2px 4px #0b1f12;
+            font-size: 1.7rem;
+            letter-spacing: 2px;
+            color: #ff3b3b;
+            text-shadow: 0 0 6px #ff8a8a;
+            font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+        }
+        .stats {
+            display: flex;
+            background: #1f3f2a;
+            padding: 6px 18px;
+            border-radius: 60px;
+            gap: 24px;
+            border: 1px solid #7bbf8a;
+            color: #e3f0da;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .stats span {
+            color: #f7f7b0;
+            font-weight: 700;
+        }
+        .controls {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            background: #1f3f2a;
+            padding: 5px 22px 5px 18px;
+            border-radius: 60px;
+            border: 1px solid #7bbf8a;
+        }
+        .ctrl-btn {
+            background: #3d6b4b;
+            border: none;
+            color: white;
+            font-size: 1.4rem;
+            width: 48px;
+            height: 48px;
+            border-radius: 40px;
+            font-weight: bold;
+            box-shadow: 0 5px 0 #1d3a26, 0 4px 8px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: 0.08s linear;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .ctrl-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #1d3a26;
+        }
+        .ctrl-btn:disabled {
+            opacity: 0.5;
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #1d3a26;
+            pointer-events: none;
+        }
+        .decision-box {
+            display: flex;
+            gap: 14px;
+            background: #1f3f2a;
+            padding: 5px 18px;
+            border-radius: 60px;
+            border: 1px solid #7bbf8a;
+        }
+        .dec-btn {
+            background: #2f5a3d;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            padding: 8px 26px;
+            border-radius: 40px;
+            box-shadow: 0 5px 0 #12321f;
+            cursor: pointer;
+            transition: 0.08s linear;
+        }
+        .dec-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #12321f;
+        }
+        .dec-btn.offside {
+            background: #8f3f4a;
+        }
+        .dec-btn.onside {
+            background: #2f7a5a;
+        }
+        .dec-btn:disabled {
+            opacity: 0.4;
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #12321f;
+            pointer-events: none;
+        }
+        .timer-warning {
+            color: #ffd966;
+            font-weight: 700;
+            background: #1f3f2a;
+            padding: 4px 18px;
+            border-radius: 40px;
+            border: 1px solid #f7d44a;
+            font-size: 1.2rem;
+        }
+        #messagePanel {
+            margin-top: 16px;
+            text-align: center;
+            background: #1a3523;
+            padding: 12px 16px;
+            border-radius: 80px;
+            font-weight: 600;
+            font-size: 1.3rem;
+            color: #f2f7e8;
+            border-left: 6px solid #eab44a;
+            border-right: 6px solid #eab44a;
+            transition: 0.2s;
+        }
+        .footer {
+            margin-top: 14px;
+            display: flex;
+            justify-content: flex-end;
+            color: #b6d9b6;
+            font-weight: 300;
+            font-size: 0.8rem;
+        }
+        /* SPLASH SCREEN overlay (start + game over) */
+        .splash {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 30, 18, 0.88);
+            backdrop-filter: blur(4px);
+            border-radius: 4rem 4rem 2.5rem 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            z-index: 20;
+            transition: opacity 0.5s ease;
+            text-align: center;
+        }
+        .splash.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .splash-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: #f5e97b;
+            text-shadow: 0 8px 0 #7a5f2a, 0 12px 20px rgba(0,0,0,0.6);
+            margin-bottom: 0.5rem;
+            transform: rotate(-1deg);
+        }
+        .splash-sub {
+            font-size: 1.3rem;
+            max-width: 600px;
+            color: #d4eed4;
+            background: #1a3f2a99;
+            padding: 1rem 2rem;
+            border-radius: 60px;
+            border: 1px solid #b1d9b1;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+            backdrop-filter: blur(2px);
+        }
+        .splash-start {
+            background: #eab44a;
+            border: none;
+            color: #1f3f2a;
+            font-size: 2.2rem;
+            font-weight: 800;
+            padding: 0.8rem 3.5rem;
+            border-radius: 80px;
+            box-shadow: 0 8px 0 #7a5f2a, 0 10px 20px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: 0.08s linear;
+            letter-spacing: 2px;
+        }
+        .splash-start:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #7a5f2a;
+        }
+        .splash-start:hover {
+            background: #f5d06a;
+        }
+        .splash .small-credit {
+            margin-top: 1.8rem;
+            color: #7ba87b;
+            font-size: 0.8rem;
+        }
+        /* Game Over specific */
+        .gameover-title {
+            font-size: 5rem;
+            font-weight: 900;
+            color: #ff4d4d;
+            text-shadow: 0 8px 0 #7a1f1f, 0 12px 24px rgba(0,0,0,0.8);
+            letter-spacing: 6px;
+            margin-bottom: 0.3rem;
+        }
+        .gameover-sub {
+            font-size: 1.8rem;
+            color: #f0d0d0;
+            background: #2a1a1a99;
+            padding: 0.6rem 2rem;
+            border-radius: 60px;
+            border: 1px solid #d99;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(2px);
+        }
+        @media (max-width: 820px) {
+            .game-container { padding: 1rem; }
+            canvas { width: 100%; height: auto; aspect-ratio: 780/440; }
+            .ui-panel { flex-direction: column; align-items: stretch; }
+            .splash-title { font-size: 3rem; }
+            .splash-sub { font-size: 1rem; padding: 0.8rem 1.2rem; }
+            .splash-start { font-size: 1.6rem; padding: 0.6rem 2.5rem; }
+            .gameover-title { font-size: 3.2rem; }
+            .gameover-sub { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container" id="gameContainer">
+    <!-- SPLASH SCREEN (start) -->
+    <div class="splash" id="splashScreen">
+        <div class="splash-title">VARRRRGH!</div>
+        <div class="splash-sub">
+            Decide in 10 seconds if the play is offside or onside.<br>
+            You have 3 lives max. Lose 1 life for an incorrect decision.<br>
+            Gain 1 life for a correct decision. Lose 0.5 lives for no decision.
+        </div>
+        <button class="splash-start" id="startGameBtn">▶ START</button>
+        <div class="small-credit">VAR · offside challenge</div>
+    </div>
+
+    <!-- GAME OVER SPLASH (hidden initially) -->
+    <div class="splash hide" id="gameOverScreen">
+        <div class="gameover-title">💀 GAME OVER</div>
+        <div class="gameover-sub">You have been fired by PGMOL</div>
+        <button class="splash-start" id="playAgainBtn">🔄 PLAY AGAIN</button>
+        <div class="small-credit" style="margin-top:1.2rem;">VAR · offside challenge</div>
+    </div>
+
+    <div class="pitch-card">
+        <canvas id="pitchCanvas" width="780" height="440"></canvas>
+
+        <div class="ui-panel">
+            <div class="hearts" id="heartsDisplay">❤️❤️❤️</div>
+            <div class="stats">
+                <div>✅ <span id="correctCount">0</span></div>
+                <div>❌ <span id="incorrectCount">0</span></div>
+                <div>📋 <span id="totalSequences">0</span></div>
+            </div>
+            <div class="controls">
+                <button class="ctrl-btn" id="playBtn">▶</button>
+                <button class="ctrl-btn" id="pauseBtn">⏸</button>
+                <button class="ctrl-btn" id="rewindBtn">⏪</button>
+            </div>
+            <div class="decision-box">
+                <button class="dec-btn offside" id="offsideBtn">OFFSIDE</button>
+                <button class="dec-btn onside" id="onsideBtn">ONSIDE</button>
+            </div>
+            <div class="timer-warning" id="timerDisplay">⏱ 10</div>
+        </div>
+        <div id="messagePanel">⚽ watch the run · judge offside</div>
+        <div class="footer">VAR · offside challenge</div>
+    </div>
+</div>
+<script>
+    (function(){
+        const canvas = document.getElementById('pitchCanvas');
+        const ctx = canvas.getContext('2d');
+        const splash = document.getElementById('splashScreen');
+        const gameOverSplash = document.getElementById('gameOverScreen');
+        const startBtn = document.getElementById('startGameBtn');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+
+        // ---------- state ----------
+        let timer = 10;
+        let timerInterval = null;
+        let decisionMade = false;
+        let hearts = 3;
+        let correctDecisions = 0;
+        let incorrectDecisions = 0;
+        let totalSequences = 0;
+        let showAnalysis = false;
+        let analysisStartTime = 0;
+        const ANALYSIS_DURATION_MS = 2000;
+
+        let players = [];
+        let ball = { x: 400, y: 220 };
+        let isPaused = false;
+        let sequenceFrame = 0;
+        const MAX_FRAMES = 180;
+
+        let isOffside = false;
+        let passerId = 'r8';
+        let receiverId = 'r9';
+        let decoyId = 'r11';
+        let offsideLineX = 230;
+        let passMomentFrame = 80;
+        let decoyIsOffside = false;
+        let canMakeDecision = false;
+        
+        let passMomentPositions = {};
+        let passMomentBall = {};
+        let receiverXAtPassMoment = 0;
+        let offsideLineXAtPassMoment = 0;
+        
+        let passFlashTimer = 0;
+        const PASS_FLASH_DURATION = 15;
+
+        let curveData = {};
+
+        let animFrame = null;
+        let isAnimating = false;
+
+        let gkStartX = 50;
+        let gkStartY = 220;
+        let gkTargetX = 50;
+        let gkTargetY = 220;
+        let gkMovementRange = 0;
+        let gkMovementStartFrame = 0;
+
+        let redGKStartX = 720;
+        let redGKStartY = 220;
+        let redGKTargetX = 720;
+        let redGKTargetY = 220;
+        let redGKMovementRange = 0;
+
+        let passerPostTargetX = 0;
+        let passerPostTargetY = 0;
+        let passerMovementStartFrame = 0;
+        let passerPreTargetX = 0;
+        let passerPreTargetY = 0;
+
+        let receiverPostTargetX = 0;
+        let receiverPostTargetY = 0;
+        let receiverPostStartX = 0;
+        let receiverPostStartY = 0;
+        let receiverPostStartFrame = 0;
+        let receiverPostActive = false;
+
+        const heartsDisplay = document.getElementById('heartsDisplay');
+        const correctSpan = document.getElementById('correctCount');
+        const incorrectSpan = document.getElementById('incorrectCount');
+        const totalSpan = document.getElementById('totalSequences');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const msgPanel = document.getElementById('messagePanel');
+        const offsideBtn = document.getElementById('offsideBtn');
+        const onsideBtn = document.getElementById('onsideBtn');
+        const playBtn = document.getElementById('playBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const rewindBtn = document.getElementById('rewindBtn');
+
+        // ---------- draw pitch ----------
+        function drawPitch() {
+            const w = 780;
+            const h = 440;
+            const margin = 20;
+            
+            ctx.strokeStyle = 'rgba(255,255,240,0.3)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(margin, margin, w - margin*2, h - margin*2);
+            
+            ctx.beginPath();
+            ctx.moveTo(w/2, margin);
+            ctx.lineTo(w/2, h - margin);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(w/2, h/2, 45, 0, Math.PI*2);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(w/2, h/2, 3, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(255,255,240,0.3)';
+            ctx.fill();
+            
+            const boxWidth = 100;
+            const boxHeight = 200;
+            const boxY = (h - boxHeight) / 2;
+            
+            ctx.strokeRect(margin, boxY, boxWidth, boxHeight);
+            const rightBoxX = w - margin - boxWidth;
+            ctx.strokeRect(rightBoxX, boxY, boxWidth, boxHeight);
+            
+            const sixYardWidth = 40;
+            const sixYardHeight = 120;
+            const sixYardY = (h - sixYardHeight) / 2;
+            
+            ctx.strokeRect(margin, sixYardY, sixYardWidth, sixYardHeight);
+            const rightSixYardX = w - margin - sixYardWidth;
+            ctx.strokeRect(rightSixYardX, sixYardY, sixYardWidth, sixYardHeight);
+            
+            const spotOffset = 60;
+            
+            ctx.beginPath();
+            ctx.arc(margin + spotOffset, h/2, 3, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(255,255,240,0.4)';
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(w - margin - spotOffset, h/2, 3, 0, Math.PI*2);
+            ctx.fill();
+            
+            const arcRadius = 50;
+            const centerY = h/2;
+            
+            const leftArcCenterX = margin + spotOffset;
+            const leftPenaltyAreaLineX = margin + boxWidth;
+            const dxLeft = leftPenaltyAreaLineX - leftArcCenterX;
+            const intersectionAngleLeft = Math.acos(dxLeft / arcRadius);
+            
+            ctx.beginPath();
+            const startYLeft = centerY - arcRadius * Math.sin(intersectionAngleLeft);
+            ctx.moveTo(leftPenaltyAreaLineX, startYLeft);
+            ctx.arc(leftArcCenterX, centerY, arcRadius, -intersectionAngleLeft, intersectionAngleLeft, false);
+            const endYLeft = centerY + arcRadius * Math.sin(intersectionAngleLeft);
+            ctx.lineTo(leftPenaltyAreaLineX, endYLeft);
+            ctx.stroke();
+            
+            const rightArcCenterX = w - margin - spotOffset;
+            const rightPenaltyAreaLineX = rightBoxX;
+            const dxRight = rightArcCenterX - rightPenaltyAreaLineX;
+            const intersectionAngleRight = Math.acos(dxRight / arcRadius);
+            
+            ctx.beginPath();
+            const startYRight = centerY - arcRadius * Math.sin(intersectionAngleRight);
+            ctx.moveTo(rightPenaltyAreaLineX, startYRight);
+            ctx.arc(rightArcCenterX, centerY, arcRadius, Math.PI - intersectionAngleRight, Math.PI + intersectionAngleRight, false);
+            const endYRight = centerY + arcRadius * Math.sin(intersectionAngleRight);
+            ctx.lineTo(rightPenaltyAreaLineX, endYRight);
+            ctx.stroke();
+        }
+
+        // ---------- generate sequence ----------
+        function generateSequence() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = null;
+            decisionMade = false;
+            showAnalysis = false;
+            analysisStartTime = 0;
+            isPaused = false;
+            canMakeDecision = false;
+            receiverPostActive = false;
+
+            isOffside = Math.random() < 0.5;
+            decoyIsOffside = Math.random() < 0.5;
+
+            sequenceFrame = 0;
+            passFlashTimer = 0;
+            passMomentPositions = {};
+            passMomentBall = {};
+            curveData = {};
+
+            const bluePlayers = [];
+            const redPlayers = [];
+
+            // BLUE GK
+            gkStartX = 50;
+            gkStartY = 220;
+            bluePlayers.push({ 
+                id: 'b1', 
+                team: 'blue', 
+                x: gkStartX, 
+                y: gkStartY, 
+                role: 'gk', 
+                startX: gkStartX, 
+                startY: gkStartY,
+                displayId: 1
+            });
+
+            // BLUE defenders
+            const defenderBaseX = 165 + (Math.random() * 10 - 5);
+            const defenderPositions = [
+                { x: defenderBaseX, y: 110, label: 'top' },
+                { x: defenderBaseX + 2, y: 165, label: 'mid-top' },
+                { x: defenderBaseX + 4, y: 220, label: 'center' },
+                { x: defenderBaseX + 2, y: 275, label: 'mid-bottom' },
+                { x: defenderBaseX, y: 330, label: 'bottom' }
+            ];
+            for (let i = 0; i < 5; i++) {
+                const pos = defenderPositions[i];
+                let forwardMovement = 0, reactiveMovement = 0;
+                if (pos.label === 'top' || pos.label === 'bottom') {
+                    forwardMovement = 35 + (Math.random() * 15 - 7);
+                    reactiveMovement = 15 + Math.random() * 10;
+                } else if (pos.label === 'mid-top' || pos.label === 'mid-bottom') {
+                    forwardMovement = 30 + (Math.random() * 12 - 6);
+                    reactiveMovement = 15 + Math.random() * 10;
+                } else {
+                    forwardMovement = 25 + (Math.random() * 10 - 5);
+                    reactiveMovement = 15 + Math.random() * 10;
+                }
+                const id = 'b' + (i + 2);
+                bluePlayers.push({
+                    id, team: 'blue', x: pos.x, y: pos.y, role: 'def',
+                    startX: pos.x, startY: pos.y,
+                    targetX: pos.x + forwardMovement,
+                    targetY: pos.y + (Math.random() * 8 - 4),
+                    reactiveTargetX: pos.x + forwardMovement - reactiveMovement,
+                    reactiveTargetY: pos.y + (Math.random() * 8 - 4),
+                    label: pos.label, reactiveAmount: reactiveMovement,
+                    displayId: i + 2
+                });
+            }
+
+            const centralX = 280 + (Math.random() * 20 - 10);
+            const centralY = 220 + (Math.random() * 20 - 10);
+            const leftX = 290 + (Math.random() * 20 - 10);
+            const leftY = 330 + (Math.random() * 20 - 10);
+            const rightX = 285 + (Math.random() * 20 - 10);
+            const rightY = 110 + (Math.random() * 20 - 10);
+            const midX = 350 + (Math.random() * 20 - 10);
+            const midY = 220 + (Math.random() * 20 - 10);
+
+            const midfieldX = midX - 50;
+            const midfieldYPositions = [
+                120 + (Math.random() * 15 - 7),
+                180 + (Math.random() * 15 - 7),
+                260 + (Math.random() * 15 - 7),
+                320 + (Math.random() * 15 - 7)
+            ];
+            for (let i = 0; i < 4; i++) {
+                const midY = midfieldYPositions[i];
+                const id = 'b' + (14 + i);
+                bluePlayers.push({
+                    id, team: 'blue', x: midfieldX, y: midY, role: 'midfielder',
+                    startX: midfieldX, startY: midY,
+                    targetX: midfieldX + (5 + Math.random() * 10),
+                    targetY: midY + (Math.random() * 10 - 5),
+                    reactiveTargetX: midfieldX + (5 + Math.random() * 10) - (10 + Math.random() * 8),
+                    reactiveTargetY: midY + (Math.random() * 10 - 5),
+                    displayId: 14 + i
+                });
+            }
+
+            const centerX = 390;
+            const centerY = 220 + (Math.random() * 20 - 10);
+            let b11Data = {
+                id: 'b11', team: 'blue', x: centerX, y: centerY, role: 'central_midfielder',
+                startX: centerX, startY: centerY, displayId: 11,
+                passerTargetX: 0, passerTargetY: 0, postPassTargetX: 0, postPassTargetY: 0
+            };
+
+            // RED GK
+            redGKStartX = 720 + (Math.random() * 10 - 5);
+            redGKStartY = 220 + (Math.random() * 10 - 5);
+            redGKMovementRange = 1 + Math.random() * 4;
+            const angle = Math.random() * 2 * Math.PI;
+            redGKTargetX = redGKStartX + Math.cos(angle) * redGKMovementRange;
+            redGKTargetY = redGKStartY + Math.sin(angle) * redGKMovementRange;
+            redPlayers.push({
+                id: 'r1', team: 'red', x: redGKStartX, y: redGKStartY, role: 'gk_red',
+                startX: redGKStartX, startY: redGKStartY,
+                targetX: redGKTargetX, targetY: redGKTargetY, displayId: 1
+            });
+
+            // RED midfielder r6
+            const halfwayLine = 390;
+            const midXOffset = (Math.random() * 10) - 5;
+            const midXPos = halfwayLine + midXOffset;
+            const yDirection = Math.random() > 0.5 ? 1 : -1;
+            const yOffset = 40 + Math.random() * 30;
+            const midYPos = 220 + (yDirection * yOffset);
+            const r6XMovement = -10 - Math.random() * 10;
+            const r6YMovement = (Math.random() * 40) - 20;
+            redPlayers.push({
+                id: 'r6', team: 'red', x: midXPos, y: midYPos, role: 'midfielder_red',
+                startX: midXPos, startY: midYPos,
+                targetX: midXPos + r6XMovement, targetY: midYPos + r6YMovement, displayId: 6
+            });
+
+            // RED left-back r3
+            const centreLine = 390;
+            const r3XStart = centreLine + (Math.random() * 40 - 20);
+            const bottomSideline = 420;
+            const r3YStart = bottomSideline - 30 - Math.random() * 15;
+            const r3XMovement = -20 - Math.random() * 20;
+            const r3YMovement = (Math.random() * 10 - 5);
+            redPlayers.push({
+                id: 'r3', team: 'red', x: r3XStart, y: r3YStart, role: 'left_back',
+                startX: r3XStart, startY: r3YStart,
+                targetX: r3XStart + r3XMovement, targetY: r3YStart + r3YMovement, displayId: 3
+            });
+
+            // RED right-back r2
+            const r2XStart = centreLine + (Math.random() * 40 - 20);
+            const topSideline = 20;
+            const r2YStart = topSideline + 30 + Math.random() * 15;
+            const r2XMovement = -20 - Math.random() * 20;
+            const r2YMovement = (Math.random() * 10 - 5);
+            redPlayers.push({
+                id: 'r2', team: 'red', x: r2XStart, y: r2YStart, role: 'right_back',
+                startX: r2XStart, startY: r2YStart,
+                targetX: r2XStart + r2XMovement, targetY: r2YStart + r2YMovement, displayId: 2
+            });
+
+            // Passer
+            const passerOptions = [8, 18];
+            const passerNumber = passerOptions[Math.floor(Math.random() * passerOptions.length)];
+            const passerIdFinal = 'r' + passerNumber;
+            const passerY = 160 + Math.random() * 120;
+            const passerX = 470 + (Math.random() * 20 - 10);
+
+            // RED defenders r4,r5
+            const halfwayX = (redGKStartX + passerX) / 2;
+            const r45XStart = halfwayX - 40;
+            const r5YStart = 220 + 70;
+            const r4YStart = 220 - 70;
+            const r45Movement = -5 - Math.random() * 10;
+            const r45YMovement = (Math.random() * 10 - 5);
+            redPlayers.push({
+                id: 'r4', team: 'red', x: r45XStart, y: r4YStart, role: 'defender_red',
+                startX: r45XStart, startY: r4YStart,
+                targetX: r45XStart + r45Movement, targetY: r4YStart + r45YMovement, displayId: 4
+            });
+            redPlayers.push({
+                id: 'r5', team: 'red', x: r45XStart, y: r5YStart, role: 'defender_red',
+                startX: r45XStart, startY: r5YStart,
+                targetX: r45XStart + r45Movement, targetY: r5YStart + r45YMovement, displayId: 5
+            });
+
+            redPlayers.push({
+                id: passerIdFinal, team: 'red', x: passerX, y: passerY, role: 'passer',
+                startX: passerX, startY: passerY,
+                targetX: passerX - (5 + Math.random() * 15), targetY: passerY + (Math.random() * 10 - 5),
+                displayId: passerNumber
+            });
+
+            // Attacking midfielder
+            const midOptions = [8, 16, 18].filter(n => n !== passerNumber);
+            const midNumber = midOptions[Math.floor(Math.random() * midOptions.length)];
+            const midId = 'r' + midNumber;
+            const midTargetX = 200 + (Math.random() * 30 - 15);
+            const midTargetY = midY + (Math.random() * 20 - 10);
+            redPlayers.push({
+                id: midId, team: 'red', x: midX, y: midY, role: 'midfielder',
+                startX: midX, startY: midY,
+                targetX: midTargetX, targetY: midTargetY, displayId: midNumber
+            });
+            curveData[midId] = { curveAmount: (Math.random() * 40 - 20), curveDirection: Math.random() > 0.5 ? 1 : -1 };
+
+            // Central forward
+            const centralOptions = [9, 10, 20];
+            const centralNumber = centralOptions[Math.floor(Math.random() * centralOptions.length)];
+            const centralId = 'r' + centralNumber;
+            const centralTargetX = 150 + (Math.random() * 40 - 20);
+            const centralTargetY = centralY + (Math.random() * 30 - 15);
+            redPlayers.push({
+                id: centralId, team: 'red', x: centralX, y: centralY, role: 'central_forward',
+                startX: centralX, startY: centralY,
+                targetX: centralTargetX, targetY: centralTargetY, displayId: centralNumber
+            });
+            curveData[centralId] = { curveAmount: (Math.random() * 60 + 10), curveDirection: Math.random() > 0.5 ? 1 : -1 };
+
+            // Left forward
+            const leftOptions = [11, 13];
+            const leftNumber = leftOptions[Math.floor(Math.random() * leftOptions.length)];
+            const leftId = 'r' + leftNumber;
+            const leftTargetX = 160 + (Math.random() * 40 - 20);
+            const leftTargetY = leftY + (Math.random() * 30 - 15);
+            redPlayers.push({
+                id: leftId, team: 'red', x: leftX, y: leftY, role: 'left_forward',
+                startX: leftX, startY: leftY,
+                targetX: leftTargetX, targetY: leftTargetY, displayId: leftNumber
+            });
+            curveData[leftId] = { curveAmount: (Math.random() * 50 - 25), curveDirection: Math.random() > 0.5 ? 1 : -1 };
+
+            // Right forward
+            const rightId = 'r7';
+            const rightTargetX = 155 + (Math.random() * 40 - 20);
+            const rightTargetY = rightY + (Math.random() * 30 - 15);
+            redPlayers.push({
+                id: rightId, team: 'red', x: rightX, y: rightY, role: 'right_forward',
+                startX: rightX, startY: rightY,
+                targetX: rightTargetX, targetY: rightTargetY, displayId: 7
+            });
+            curveData[rightId] = { curveAmount: (Math.random() * 50 - 25), curveDirection: Math.random() > 0.5 ? 1 : -1 };
+
+            const forwardIds = [centralId, leftId, rightId];
+            const receiverIndex = Math.floor(Math.random() * forwardIds.length);
+            receiverId = forwardIds[receiverIndex];
+            const remainingForwards = forwardIds.filter(id => id !== receiverId);
+            const decoyIndex = Math.floor(Math.random() * remainingForwards.length);
+            decoyId = remainingForwards[decoyIndex];
+            const otherForwardId = remainingForwards.filter(id => id !== decoyId)[0];
+            passerId = passerIdFinal;
+
+            window._receiverId = receiverId;
+            window._decoyId = decoyId;
+            window._otherForwardId = otherForwardId;
+            window._midfielderId = midId;
+
+            const passer = redPlayers.find(p => p.id === passerId);
+            if (passer) {
+                const passerKickX = passer.targetX;
+                const passerKickY = passer.targetY;
+                b11Data.passerTargetX = passerKickX - 15;
+                b11Data.passerTargetY = passerKickY;
+                b11Data.postPassTargetX = passerKickX - 15 - 10;
+                b11Data.postPassTargetY = passerKickY;
+            }
+
+            bluePlayers.push(b11Data);
+
+            const receiver = redPlayers.find(p => p.id === receiverId);
+            if (receiver) {
+                const dx = gkStartX - receiver.targetX;
+                const dy = gkStartY - receiver.targetY;
+                const distance = Math.sqrt(dx*dx + dy*dy);
+                if (distance > 0) {
+                    const moveDistance = 10 + Math.random() * 20;
+                    const normX = dx / distance;
+                    const normY = dy / distance;
+                    receiverPostTargetX = receiver.targetX + normX * moveDistance;
+                    receiverPostTargetY = receiver.targetY + normY * moveDistance;
+                    receiverPostStartFrame = Math.floor(MAX_FRAMES * 0.70) + 2;
+                    receiverPostActive = false;
+                    receiverPostStartX = receiver.targetX;
+                    receiverPostStartY = receiver.targetY;
+                }
+            }
+
+            const decoy = redPlayers.find(p => p.id === decoyId);
+            if (decoy) {
+                if (decoyIsOffside) {
+                    decoy.targetX = offsideLineX - 60 + (Math.random() * 30 - 15);
+                } else {
+                    decoy.targetX = offsideLineX + 50 + (Math.random() * 30 - 15);
+                }
+                decoy.targetY = decoy.startY + (Math.random() * 40 - 20);
+                curveData[decoyId] = {
+                    curveAmount: (Math.random() * 30 + 10),
+                    curveDirection: Math.random() > 0.5 ? 1 : -1
+                };
+            }
+
+            players = [...bluePlayers, ...redPlayers];
+            players.forEach(p => {
+                p.startX = p.x;
+                p.startY = p.y;
+                if (!p.targetX) {
+                    p.targetX = p.x + (Math.random() * 20 - 10);
+                    p.targetY = p.y + (Math.random() * 20 - 10);
+                }
+                if (!p.reactiveTargetX) {
+                    p.reactiveTargetX = p.targetX - 15;
+                    p.reactiveTargetY = p.targetY;
+                }
+                if (!p.passerTargetX) {
+                    p.passerTargetX = p.x;
+                    p.passerTargetY = p.y;
+                }
+                if (!p.postPassTargetX) {
+                    p.postPassTargetX = p.passerTargetX - 10;
+                    p.postPassTargetY = p.passerTargetY;
+                }
+            });
+
+            const defenders = players.filter(p => p.team === 'blue' && p.role === 'def');
+            if (defenders.length > 0) {
+                const sortedDefenders = [...defenders].sort((a, b) => a.x - b.x);
+                const secondLastDefender = sortedDefenders[0];
+                offsideLineX = secondLastDefender.x;
+            }
+
+            const receiverFinal = players.find(p => p.id === receiverId);
+            if (receiverFinal) {
+                const passProgress = 0.60;
+                const easeAtPass = passProgress * passProgress * (3 - 2 * passProgress);
+                const defenderProgress = passMomentFrame / MAX_FRAMES;
+                const defenderEase = defenderProgress * defenderProgress * (3 - 2 * defenderProgress);
+                const lineMovement = 35 * defenderEase;
+                const estimatedLineAtPass = offsideLineX + lineMovement;
+                const offset = (Math.random() * 10) - 5;
+                let finalOffset = offset;
+                if (isOffside) finalOffset = Math.min(offset, -1);
+                else finalOffset = Math.max(offset, 1);
+                const desiredXAtPass = estimatedLineAtPass + finalOffset;
+                const startX = receiverFinal.startX;
+                const targetX = startX + (desiredXAtPass - startX) / easeAtPass;
+                receiverFinal.targetX = Math.max(150, Math.min(380, targetX));
+                receiverFinal.targetY = receiverFinal.startY + (Math.random() * 30 - 15);
+                receiverPostStartX = receiverFinal.targetX;
+                receiverPostStartY = receiverFinal.targetY;
+            }
+
+            gkMovementRange = 5 + Math.random() * 15;
+            const receiverFinal2 = players.find(p => p.id === receiverId);
+            if (receiverFinal2) {
+                const dx = receiverFinal2.targetX - gkStartX;
+                const dy = receiverFinal2.targetY - gkStartY;
+                const distance = Math.sqrt(dx*dx + dy*dy);
+                if (distance > 0) {
+                    const normX = dx / distance;
+                    const normY = dy / distance;
+                    gkTargetX = gkStartX + normX * gkMovementRange;
+                    gkTargetY = gkStartY + normY * gkMovementRange;
+                } else {
+                    gkTargetX = gkStartX;
+                    gkTargetY = gkStartY;
+                }
+                gkMovementStartFrame = passMomentFrame + 4;
+            }
+
+            const passerFinal = players.find(p => p.id === passerId);
+            if (passerFinal) {
+                passerPreTargetX = passerFinal.targetX;
+                passerPreTargetY = passerFinal.targetY;
+                const passerPostMovement = 10 + Math.random() * 15;
+                passerPostTargetX = passerPreTargetX - passerPostMovement;
+                passerPostTargetY = passerPreTargetY + (Math.random() * 10 - 5);
+                passerMovementStartFrame = passMomentFrame + 2;
+            }
+
+            if (passerFinal) {
+                ball.x = passerFinal.x - 15;
+                ball.y = passerFinal.y + 5;
+            }
+
+            passMomentFrame = 70 + Math.floor(Math.random() * 15);
+
+            receiverXAtPassMoment = 0;
+            offsideLineXAtPassMoment = 0;
+            passFlashTimer = 0;
+            passMomentPositions = {};
+            passMomentBall = {};
+
+            timer = 10;
+            updateTimerDisplay();
+            enableDecisionButtons(false);
+            enableControlButtons(false);
+            msgPanel.innerText = '⚡ watch the run · judge OFFSIDE or ONSIDE';
+        }
+
+        // ---------- update positions (same as original) ----------
+        function updatePositions(frame) {
+            const progress = Math.min(frame / MAX_FRAMES, 1);
+            const receiver = players.find(p => p.id === receiverId);
+            const passer = players.find(p => p.id === passerId);
+            const decoy = players.find(p => p.id === decoyId);
+            const passReceivedProgress = 0.70;
+            const isAfterPass = progress > passReceivedProgress;
+            const otherForwardId = window._otherForwardId;
+            const midfielderId = window._midfielderId;
+            const reactiveStartFrame = passMomentFrame + 2;
+            
+            players.forEach(p => {
+                if (p.id === 'r1') {
+                    const gkProgress = Math.min(frame / MAX_FRAMES, 1);
+                    const ease = gkProgress * gkProgress * (3 - 2 * gkProgress);
+                    p.x = p.startX + (p.targetX - p.startX) * ease;
+                    p.y = p.startY + (p.targetY - p.startY) * ease;
+                    return;
+                }
+                if (p.id === 'r6') {
+                    const moveProgress = Math.min(frame / MAX_FRAMES, 1);
+                    const ease = moveProgress * moveProgress * (3 - 2 * moveProgress);
+                    p.x = p.startX + (p.targetX - p.startX) * ease;
+                    p.y = p.startY + (p.targetY - p.startY) * ease;
+                    return;
+                }
+                if (p.id === 'r3') {
+                    const moveProgress = Math.min(frame / MAX_FRAMES, 1);
+                    const ease = Math.pow(moveProgress, 1.5);
+                    p.x = p.startX + (p.targetX - p.startX) * ease;
+                    p.y = p.startY + (p.targetY - p.startY) * ease * 0.3;
+                    return;
+                }
+                if (p.id === 'r2') {
+                    const moveProgress = Math.min(frame / MAX_FRAMES, 1);
+                    const ease = Math.pow(moveProgress, 1.5);
+                    p.x = p.startX + (p.targetX - p.startX) * ease;
+                    p.y = p.startY + (p.targetY - p.startY) * ease * 0.3;
+                    return;
+                }
+                if (p.id === 'r4' || p.id === 'r5') {
+                    const moveProgress = Math.min(frame / MAX_FRAMES, 1);
+                    const ease = moveProgress * moveProgress * (3 - 2 * moveProgress);
+                    p.x = p.startX + (p.targetX - p.startX) * ease;
+                    p.y = p.startY + (p.targetY - p.startY) * ease * 0.2;
+                    return;
+                }
+                if (p.role === 'gk' && p.id === 'b1') {
+                    const gk = p;
+                    const startFrame = gkMovementStartFrame;
+                    const endFrame = MAX_FRAMES;
+                    if (frame >= startFrame && frame <= endFrame) {
+                        const gkProgress = (frame - startFrame) / (endFrame - startFrame);
+                        const ease = gkProgress * gkProgress * (3 - 2 * gkProgress);
+                        const slowEase = Math.min(ease * 0.7, 1);
+                        gk.x = gkStartX + (gkTargetX - gkStartX) * slowEase;
+                        gk.y = gkStartY + (gkTargetY - gkStartY) * slowEase;
+                    } else if (frame < startFrame) {
+                        gk.x = gkStartX;
+                        gk.y = gkStartY;
+                    }
+                    return;
+                }
+                const isReceiver = (p.id === receiverId);
+                const isDecoy = (p.id === decoyId);
+                const isPasser = (p.id === passerId);
+                const isOtherForward = (p.id === otherForwardId);
+                const isMidfielder = (p.id === midfielderId);
+                const isDefender = (p.team === 'blue' && p.role === 'def');
+                const isBlueMidfielder = (p.team === 'blue' && p.role === 'midfielder');
+                const isB11 = (p.id === 'b11');
+                
+                if (isB11) {
+                    if (frame < passMomentFrame) {
+                        const moveProgress = Math.min(frame / passMomentFrame, 1);
+                        const ease = moveProgress * moveProgress * (3 - 2 * moveProgress);
+                        p.x = p.startX + (p.passerTargetX - p.startX) * ease;
+                        p.y = p.startY + (p.passerTargetY - p.startY) * ease;
+                    } else {
+                        const afterProgress = (frame - passMomentFrame) / (MAX_FRAMES - passMomentFrame);
+                        const eased = Math.min(afterProgress * afterProgress * (3 - 2 * afterProgress), 1);
+                        p.x = p.passerTargetX + (p.postPassTargetX - p.passerTargetX) * eased;
+                        p.y = p.passerTargetY + (p.postPassTargetY - p.passerTargetY) * eased;
+                    }
+                    return;
+                }
+                if (isDefender) {
+                    if (frame < reactiveStartFrame) {
+                        const moveProgress = Math.min(frame / reactiveStartFrame, 1);
+                        const ease = moveProgress * moveProgress * (3 - 2 * moveProgress);
+                        p.x = p.startX + (p.targetX - p.startX) * ease;
+                        p.y = p.startY + (p.targetY - p.startY) * ease;
+                    } else {
+                        const reactiveProgress = (frame - reactiveStartFrame) / (MAX_FRAMES - reactiveStartFrame);
+                        const ease = Math.min(reactiveProgress * reactiveProgress * (3 - 2 * reactiveProgress), 1);
+                        p.x = p.targetX + (p.reactiveTargetX - p.targetX) * ease;
+                        p.y = p.targetY + (p.reactiveTargetY - p.targetY) * ease;
+                    }
+                    return;
+                }
+                if (isBlueMidfielder) {
+                    if (frame < reactiveStartFrame) {
+                        const moveProgress = Math.min(frame / reactiveStartFrame, 1);
+                        const ease = moveProgress * moveProgress * (3 - 2 * moveProgress);
+                        p.x = p.startX + (p.targetX - p.startX) * ease;
+                        p.y = p.startY + (p.targetY - p.startY) * ease;
+                    } else {
+                        const reactiveProgress = (frame - reactiveStartFrame) / (MAX_FRAMES - reactiveStartFrame);
+                        const ease = Math.min(reactiveProgress * reactiveProgress * (3 - 2 * reactiveProgress), 1);
+                        p.x = p.targetX + (p.reactiveTargetX - p.targetX) * ease;
+                        p.y = p.targetY + (p.reactiveTargetY - p.targetY) * ease;
+                    }
+                    return;
+                }
+                if (isMidfielder || isOtherForward || isDecoy) {
+                    const easedProgress = progress * progress * (0.5 + 0.5 * progress);
+                    const clampedProgress = Math.min(easedProgress, 1);
+                    p.x = p.startX + (p.targetX - p.startX) * clampedProgress;
+                    p.y = p.startY + (p.targetY - p.startY) * clampedProgress;
+                    if (isDecoy) {
+                        const curve = curveData[p.id];
+                        if (curve) {
+                            const curveProgress = clampedProgress;
+                            const curveShape = Math.sin(curveProgress * Math.PI) * 1.0;
+                            const curveOffset = curve.curveAmount * curveShape * 0.5;
+                            p.y += curveOffset;
+                        }
+                    }
+                    return;
+                }
+                if (isPasser) {
+                    if (frame < passMomentFrame) {
+                        const prePassProgress = Math.min(frame / passMomentFrame, 1);
+                        const ease = prePassProgress * prePassProgress * (3 - 2 * prePassProgress);
+                        p.x = p.startX + (p.targetX - p.startX) * ease;
+                        p.y = p.startY + (p.targetY - p.startY) * ease;
+                    } else if (frame >= passerMovementStartFrame) {
+                        const moveProgress = (frame - passerMovementStartFrame) / (MAX_FRAMES - passerMovementStartFrame);
+                        const eased = Math.min(moveProgress * moveProgress * (3 - 2 * moveProgress), 1);
+                        p.x = passerPreTargetX + (passerPostTargetX - passerPreTargetX) * eased;
+                        p.y = passerPreTargetY + (passerPostTargetY - passerPreTargetY) * eased;
+                    }
+                    return;
+                }
+                if (isReceiver) {
+                    if (frame >= receiverPostStartFrame && receiverPostTargetX !== 0) {
+                        if (!receiverPostActive) {
+                            receiverPostActive = true;
+                            receiverPostStartX = p.x;
+                            receiverPostStartY = p.y;
+                        }
+                        const postProgress = (frame - receiverPostStartFrame) / (MAX_FRAMES - receiverPostStartFrame);
+                        const postEase = Math.min(postProgress * postProgress * (3 - 2 * postProgress), 1);
+                        p.x = receiverPostStartX + (receiverPostTargetX - receiverPostStartX) * postEase;
+                        p.y = receiverPostStartY + (receiverPostTargetY - receiverPostStartY) * postEase;
+                        return;
+                    }
+                    const runProgress = Math.min(progress / 0.70, 1);
+                    let ease = runProgress * runProgress * (3 - 2 * runProgress);
+                    let curveOffset = 0;
+                    if (isAfterPass) {
+                        const freezeAt = passReceivedProgress;
+                        const freezeProgress = Math.min(freezeAt / 0.70, 1);
+                        ease = freezeProgress * freezeProgress * (3 - 2 * freezeProgress);
+                        const curve = curveData[p.id];
+                        if (curve) {
+                            const freezeCurveProgress = Math.min(freezeAt / 0.70, 1);
+                            const curveShape = Math.sin(freezeCurveProgress * Math.PI) * 1.2;
+                            curveOffset = curve.curveAmount * curveShape * 0.8;
+                        }
+                    } else {
+                        const curve = curveData[p.id];
+                        if (curve) {
+                            const curveProgress = runProgress;
+                            const curveShape = Math.sin(curveProgress * Math.PI) * 1.2;
+                            curveOffset = curve.curveAmount * curveShape * 0.8;
+                        }
+                    }
+                    p.x = p.startX + (p.targetX - p.startX) * ease;
+                    p.y = p.startY + (p.targetY - p.startY) * ease + curveOffset;
+                    return;
+                }
+            });
+
+            const defenders = players.filter(p => p.team === 'blue' && p.role === 'def');
+            if (defenders.length > 0) {
+                const sortedDefenders = [...defenders].sort((a, b) => a.x - b.x);
+                const secondLastDefender = sortedDefenders[0];
+                offsideLineX = secondLastDefender.x;
+            }
+
+            const currentFrame = frame;
+            if (currentFrame === passMomentFrame) {
+                players.forEach(p => {
+                    passMomentPositions[p.id] = { x: p.x, y: p.y };
+                });
+                passMomentBall = { x: ball.x, y: ball.y };
+                receiverXAtPassMoment = receiver ? receiver.x : 0;
+                offsideLineXAtPassMoment = offsideLineX;
+                passFlashTimer = PASS_FLASH_DURATION;
+            }
+            
+            if (currentFrame >= MAX_FRAMES - 1 && !decisionMade) {
+                canMakeDecision = true;
+                enableDecisionButtons(true);
+                enableControlButtons(true);
+                msgPanel.innerText = '⚡ Make your decision: OFFSIDE or ONSIDE?';
+            }
+            
+            if (passFlashTimer > 0) passFlashTimer--;
+
+            if (passer && receiver) {
+                const startX = passer.x - 10;
+                const startY = passer.y - 5;
+                const endX = receiver.x - 8;
+                const endY = receiver.y - 12;
+                const passStart = passMomentFrame / MAX_FRAMES;
+                const passEnd = passStart + 0.35;
+                let t = 0;
+                if (progress < passStart) t = 0;
+                else if (progress < passEnd) t = (progress - passStart) / (passEnd - passStart);
+                else t = 1;
+                const eased = t * t * (3 - 2 * t);
+                ball.x = startX + (endX - startX) * eased;
+                ball.y = startY + (endY - startY) * eased - 20 * Math.sin(eased * Math.PI) * 0.5;
+            }
+        }
+
+        // ---------- drawScene ----------
+        function drawScene() {
+            ctx.clearRect(0, 0, 780, 440);
+            drawPitch();
+
+            let drawPlayers = players;
+            let drawBall = ball;
+            let drawOffsideLineX = offsideLineX;
+            
+            if (showAnalysis) {
+                drawOffsideLineX = offsideLineXAtPassMoment;
+                players.forEach(p => {
+                    if (passMomentPositions[p.id]) {
+                        p._drawX = passMomentPositions[p.id].x;
+                        p._drawY = passMomentPositions[p.id].y;
+                    } else {
+                        p._drawX = p.x;
+                        p._drawY = p.y;
+                    }
+                });
+                if (passMomentBall.x !== undefined) drawBall = passMomentBall;
+            } else {
+                players.forEach(p => {
+                    p._drawX = p.x;
+                    p._drawY = p.y;
+                });
+            }
+
+            if (showAnalysis) {
+                ctx.beginPath();
+                ctx.setLineDash([6, 6]);
+                ctx.strokeStyle = 'rgba(255, 200, 50, 0.8)';
+                ctx.lineWidth = 3;
+                ctx.moveTo(drawOffsideLineX, 30);
+                ctx.lineTo(drawOffsideLineX, 410);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = 'rgba(255, 200, 50, 0.9)';
+                ctx.font = 'bold 12px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('OFFSIDE LINE', drawOffsideLineX, 25);
+
+                if (receiverXAtPassMoment > 0) {
+                    ctx.beginPath();
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeStyle = 'rgba(255, 255, 100, 0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.moveTo(receiverXAtPassMoment, 30);
+                    ctx.lineTo(receiverXAtPassMoment, 410);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = 'rgba(255, 255, 100, 0.7)';
+                    ctx.font = 'bold 10px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('RECEIVER AT PASS', receiverXAtPassMoment, 415);
+                    const wasOffside = receiverXAtPassMoment < drawOffsideLineX;
+                    const distance = Math.abs(receiverXAtPassMoment - drawOffsideLineX);
+                    ctx.fillStyle = wasOffside ? 'rgba(255, 50, 50, 0.8)' : 'rgba(50, 255, 50, 0.8)';
+                    ctx.font = 'bold 14px monospace';
+                    ctx.fillText(wasOffside ? '🔴 OFFSIDE' : '🟢 ONSIDE', receiverXAtPassMoment, 45);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                    ctx.font = 'bold 10px monospace';
+                    ctx.fillText(`${distance.toFixed(1)}px from line`, receiverXAtPassMoment, 60);
+                }
+
+                const defenders = players.filter(p => p.team === 'blue' && p.role === 'def');
+                if (defenders.length > 0) {
+                    const sortedDefenders = [...defenders].sort((a, b) => a.x - b.x);
+                    const secondLastDefender = sortedDefenders[0];
+                    if (secondLastDefender) {
+                        ctx.beginPath();
+                        ctx.arc(secondLastDefender._drawX, secondLastDefender._drawY, 22, 0, 2*Math.PI);
+                        ctx.strokeStyle = 'rgba(255, 200, 50, 0.6)';
+                        ctx.lineWidth = 2;
+                        ctx.setLineDash([4, 4]);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
+                }
+            }
+
+            if (passFlashTimer > 0 && !showAnalysis) {
+                const passer = players.find(p => p.id === passerId);
+                if (passer) {
+                    const intensity = passFlashTimer / PASS_FLASH_DURATION;
+                    const radius = 40 + (1 - intensity) * 30;
+                    const gradient = ctx.createRadialGradient(
+                        passer.x, passer.y, 10,
+                        passer.x, passer.y, radius
+                    );
+                    gradient.addColorStop(0, `rgba(255, 255, 100, ${0.8 * intensity})`);
+                    gradient.addColorStop(0.5, `rgba(255, 200, 50, ${0.4 * intensity})`);
+                    gradient.addColorStop(1, `rgba(255, 200, 50, 0)`);
+                    ctx.beginPath();
+                    ctx.arc(passer.x, passer.y, radius, 0, 2 * Math.PI);
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(passer.x, passer.y, 25 + (1 - intensity) * 10, 0, 2 * Math.PI);
+                    ctx.strokeStyle = `rgba(255, 255, 200, ${0.9 * intensity})`;
+                    ctx.lineWidth = 3 + (1 - intensity) * 4;
+                    ctx.stroke();
+                    ctx.fillStyle = `rgba(255, 255, 200, ${0.9 * intensity})`;
+                    ctx.font = 'bold 16px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText('⚡ PASS!', passer.x, passer.y - 35);
+                }
+            }
+
+            players.forEach(p => {
+                const drawX = p._drawX !== undefined ? p._drawX : p.x;
+                const drawY = p._drawY !== undefined ? p._drawY : p.y;
+                ctx.beginPath();
+                ctx.arc(drawX, drawY, 17, 0, 2*Math.PI);
+                ctx.fillStyle = p.team === 'blue' ? '#2a6fdb' : '#d9453a';
+                ctx.fill();
+                ctx.strokeStyle = '#f5f2d0';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 13px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const displayText = p.displayId !== undefined ? p.displayId : p.id;
+                ctx.fillText(displayText, drawX, drawY-1);
+                if (showAnalysis) {
+                    if (p.id === receiverId) {
+                        ctx.beginPath();
+                        ctx.arc(drawX, drawY, 24, 0, 2*Math.PI);
+                        ctx.strokeStyle = '#ffe066';
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                        ctx.fillStyle = '#ffe066';
+                        ctx.font = 'bold 10px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('★ RECEIVER', drawX, drawY - 32);
+                    }
+                    if (p.id === passerId) {
+                        ctx.beginPath();
+                        ctx.arc(drawX, drawY, 22, 0, 2*Math.PI);
+                        ctx.strokeStyle = '#66ff99';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        ctx.fillStyle = '#66ff99';
+                        ctx.font = 'bold 10px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('PASSER', drawX, drawY - 32);
+                    }
+                    if (p.id === decoyId) {
+                        ctx.beginPath();
+                        ctx.arc(drawX, drawY, 22, 0, 2*Math.PI);
+                        ctx.strokeStyle = '#ff66aa';
+                        ctx.lineWidth = 2;
+                        ctx.setLineDash([4, 4]);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                        ctx.fillStyle = '#ff66aa';
+                        ctx.font = 'bold 10px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('DECOY', drawX, drawY - 32);
+                        const decoyWasOffside = drawX < offsideLineXAtPassMoment;
+                        ctx.fillStyle = decoyWasOffside ? 'rgba(255, 50, 50, 0.7)' : 'rgba(50, 255, 50, 0.7)';
+                        ctx.font = 'bold 9px monospace';
+                        ctx.fillText(decoyWasOffside ? '(offside)' : '(onside)', drawX, drawY + 32);
+                    }
+                }
+            });
+
+            const ballX = showAnalysis ? drawBall.x : ball.x;
+            const ballY = showAnalysis ? drawBall.y : ball.y;
+            ctx.shadowColor = '#222';
+            ctx.shadowBlur = 14;
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, 10, 0, 2*Math.PI);
+            ctx.fillStyle = '#f8f8f0';
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        // ---------- animation loop ----------
+        function animationLoop(timestamp) {
+            if (!isAnimating) return;
+            if (isPaused) {
+                drawScene();
+                animFrame = requestAnimationFrame(animationLoop);
+                return;
+            }
+            if (showAnalysis) {
+                const elapsed = timestamp - analysisStartTime;
+                drawScene();
+                if (elapsed >= ANALYSIS_DURATION_MS) {
+                    isAnimating = false;
+                    if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+                    resetSequence();
+                    return;
+                }
+                animFrame = requestAnimationFrame(animationLoop);
+                return;
+            }
+            if (sequenceFrame < MAX_FRAMES) {
+                sequenceFrame++;
+                updatePositions(sequenceFrame);
+                drawScene();
+                animFrame = requestAnimationFrame(animationLoop);
+            } else {
+                sequenceFrame = 0;
+                players.forEach(p => { p.x = p.startX; p.y = p.startY; });
+                updatePositions(0);
+                drawScene();
+                animFrame = requestAnimationFrame(animationLoop);
+            }
+        }
+
+        function startAnimation() {
+            if (isAnimating) return;
+            isAnimating = true;
+            if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+            animFrame = requestAnimationFrame(animationLoop);
+        }
+
+        function stopAnimation() {
+            isAnimating = false;
+            if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+        }
+
+        // ---------- timer ----------
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (decisionMade) return;
+                timer = Math.max(0, timer - 0.5);
+                updateTimerDisplay();
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    handleTimeout();
+                }
+            }, 500);
+        }
+
+        function updateTimerDisplay() {
+            timerDisplay.innerText = `⏱ ${Math.ceil(timer)}`;
+            timerDisplay.style.color = timer < 3 ? '#ffa07a' : '#ffd966';
+        }
+
+        // ---------- decision handling ----------
+        function handleDecision(userSaysOffside) {
+            if (decisionMade) return;
+            if (!canMakeDecision) return;
+            decisionMade = true;
+            isPaused = false;
+            clearInterval(timerInterval);
+            timerInterval = null;
+            enableDecisionButtons(false);
+            enableControlButtons(false);
+
+            let actualOffside = false;
+            if (receiverXAtPassMoment > 0 && offsideLineXAtPassMoment > 0) {
+                actualOffside = receiverXAtPassMoment < offsideLineXAtPassMoment;
+            } else {
+                actualOffside = isOffside;
+            }
+
+            const correct = (userSaysOffside === actualOffside);
+            let outcomeMsg = '';
+            if (correct) {
+                correctDecisions++;
+                outcomeMsg = `✅ Correct! It was ${actualOffside ? 'OFFSIDE' : 'ONSIDE'}`;
+                addHeart(1);
+            } else {
+                incorrectDecisions++;
+                outcomeMsg = `❌ Wrong! It was ${actualOffside ? 'OFFSIDE' : 'ONSIDE'}`;
+                addHeart(-1);
+            }
+            totalSequences++;
+            updateStats();
+            msgPanel.innerText = outcomeMsg;
+            showAnalysis = true;
+            analysisStartTime = performance.now();
+        }
+
+        function handleTimeout() {
+            if (decisionMade) return;
+            if (!canMakeDecision) return;
+            decisionMade = true;
+            isPaused = false;
+            enableDecisionButtons(false);
+            enableControlButtons(false);
+            addHeart(-0.5);
+            totalSequences++;
+            updateStats();
+            let actualOffside = false;
+            if (receiverXAtPassMoment > 0 && offsideLineXAtPassMoment > 0) {
+                actualOffside = receiverXAtPassMoment < offsideLineXAtPassMoment;
+            } else {
+                actualOffside = isOffside;
+            }
+            msgPanel.innerText = `⏰ Time out! It was ${actualOffside ? 'OFFSIDE' : 'ONSIDE'} (-0.5❤️)`;
+            showAnalysis = true;
+            analysisStartTime = performance.now();
+        }
+
+        function addHeart(delta) {
+            hearts = Math.min(3, Math.max(0, hearts + delta));
+            if (hearts <= 0) { 
+                hearts = 0; 
+                gameOver();
+            }
+            updateHeartsDisplay();
+        }
+
+        function gameOver() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            enableDecisionButtons(false);
+            enableControlButtons(false);
+            msgPanel.innerText = '🔥 YOU ARE FIRED! 🔥  game over';
+            showAnalysis = false;
+            stopAnimation();
+            drawScene();
+            // show game over splash
+            gameOverSplash.classList.remove('hide');
+        }
+
+        function updateHeartsDisplay() {
+            const full = Math.floor(hearts);
+            const decimal = hearts - full;
+            const hasHalf = decimal >= 0.4 && decimal < 0.9;
+            let str = '';
+            for (let i = 0; i < full; i++) str += '❤️';
+            if (hasHalf) str += '❤️‍🩹';
+            const remaining = 3 - full - (hasHalf ? 1 : 0);
+            for (let i = 0; i < remaining; i++) str += '🖤';
+            heartsDisplay.innerText = str || '💔';
+        }
+
+        function updateStats() {
+            correctSpan.innerText = correctDecisions;
+            incorrectSpan.innerText = incorrectDecisions;
+            totalSpan.innerText = totalSequences;
+        }
+
+        function enableDecisionButtons(enabled) {
+            offsideBtn.disabled = !enabled;
+            onsideBtn.disabled = !enabled;
+        }
+
+        function enableControlButtons(enabled) {
+            playBtn.disabled = !enabled;
+            pauseBtn.disabled = !enabled;
+            rewindBtn.disabled = !enabled;
+        }
+
+        // ---------- resetSequence (used after analysis) ----------
+        function resetSequence() {
+            if (hearts <= 0) return;
+            stopAnimation();
+            generateSequence();
+            startTimer();
+            sequenceFrame = 0;
+            players.forEach(p => { p.x = p.startX; p.y = p.startY; });
+            updatePositions(0);
+            drawScene();
+            startAnimation();
+            enableDecisionButtons(false);
+            enableControlButtons(false);
+            msgPanel.innerText = '⚡ watch the run · judge offside';
+        }
+
+        // ---------- controls ----------
+        playBtn.addEventListener('click', () => {
+            if (isPaused && !decisionMade && canMakeDecision) {
+                isPaused = false;
+                if (!isAnimating) startAnimation();
+            }
+        });
+        pauseBtn.addEventListener('click', () => {
+            if (!decisionMade && !showAnalysis && canMakeDecision) isPaused = true;
+        });
+        rewindBtn.addEventListener('click', () => {
+            if (!decisionMade && !showAnalysis && canMakeDecision) {
+                sequenceFrame = Math.max(0, sequenceFrame - 25);
+                updatePositions(sequenceFrame);
+                drawScene();
+            }
+        });
+
+        offsideBtn.addEventListener('click', () => handleDecision(true));
+        onsideBtn.addEventListener('click', () => handleDecision(false));
+
+        // ---------- full fresh start (reset everything) ----------
+        function fullReset() {
+            // hide both splash screens
+            splash.classList.add('hide');
+            gameOverSplash.classList.add('hide');
+            // reset stats
+            hearts = 3;
+            correctDecisions = 0;
+            incorrectDecisions = 0;
+            totalSequences = 0;
+            updateHeartsDisplay();
+            updateStats();
+            // stop any ongoing animation
+            stopAnimation();
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = null;
+            // init game
+            generateSequence();
+            players.forEach(p => { p.x = p.startX; p.y = p.startY; });
+            updatePositions(0);
+            drawScene();
+            startTimer();
+            startAnimation();
+            enableDecisionButtons(false);
+            enableControlButtons(false);
+            msgPanel.innerText = '⚽ watch the run · judge offside';
+        }
+
+        // ---------- init game (from start splash) ----------
+        function initGame() {
+            splash.classList.add('hide');
+            fullReset();
+        }
+
+        // ---------- event listeners ----------
+        startBtn.addEventListener('click', initGame);
+        playAgainBtn.addEventListener('click', () => {
+            fullReset();
+        });
+
+        // canvas click to restart if game over (alternative)
+        canvas.addEventListener('click', () => {
+            if (hearts === 0) {
+                fullReset();
+            }
+        });
+
+        // initial splash state: draw pitch but no game
+        (function drawInitialPitch() {
+            ctx.clearRect(0, 0, 780, 440);
+            drawPitch();
+        })();
+
+    })();
+</script>
+</body>
+</html>
